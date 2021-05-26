@@ -8,7 +8,7 @@ import re
 import string
 
 
-data = pd.read_csv('Reviews.csv')
+data = pd.read_csv('Reviews1.csv')
 # print( data.head(1)['Text'] )
 
 def preprocess(revs):
