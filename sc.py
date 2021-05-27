@@ -1,3 +1,4 @@
+from nltk.sem.logic import TypeResolutionException
 import numpy as np
 import pandas as pd
 from nltk.corpus import stopwords         
@@ -7,25 +8,17 @@ import matplotlib.pyplot as plt
 import re
 import string
 
-
-data = pd.read_csv('Reviews1.csv')
-# print( type( data.head()) )
-
 def get_pos_neg(dataset):
     ## get all the positive and negative labelled reviews
     pos = []
     neg = []
     for index, revs in dataset.iterrows():
         if revs.Recommended == 1:
-            pos.append( revs['Text'] )
+            pos.append( revs )
         else:
-            neg.append( revs['Text']) 
-    # positives = 19314; negatives = 4172
-    return pos, neg  
-
-positive_reviews, negative_reviews = get_pos_neg( data ) 
-print(len(positive_reviews), " " , len(negative_reviews))
-
+            neg.append( revs) 
+    # positives = 18540; negatives = 4101
+    return pos, neg 
 
 def preprocess(revs):
     ## takes reviews and returns pre_processed reviews and dictionary of unique words
@@ -49,14 +42,46 @@ def preprocess(revs):
     
     return dictionary, revs
 
-
-words, data = preprocess(data)
-print( data.head())
-
 # The keys are a tuple (word, label) and 
 # the values are the corresponding frequency. 
 # The labels we'll use here are 1 for positive and 0 for negative.
 
 def make_count(dictionary, data):
-    
+    word_freq = {}
     for index, row in data.iterrows():
+        for word in row['Text']:
+            if word in dictionary:
+                # check frequency of that word in the specific review
+                freq = len( [i for i, x in enumerate(row['Text']) if x == word] )
+                temp = (word, row['Recommended'])
+                # word_freq[ temp ] += 1
+                if temp in word_freq.keys():
+                    word_freq[ temp ] += 1
+                else:
+                    word_freq[ temp ] = 1
+    return word_freq
+
+
+data = pd.read_csv('Reviews1.csv')
+# print( type( data.head()) )
+words, data = preprocess(data)
+positive_reviews, negative_reviews = get_pos_neg( data ) 
+# print(len(positive_reviews), " " , len(negative_reviews))
+
+# training set = 80% 
+# testing set = 20%
+# positives = 18540; negatives = 4101
+
+train_pos = positive_reviews[:14832]
+test_pos = positive_reviews[14832:]
+
+train_neg = negative_reviews[:3281]
+test_neg = negative_reviews[3281:]
+
+training_set = train_pos + train_neg
+test_set = test_pos + test_neg
+
+ratings = make_count(words, data)
+# print(ratings[('silki', 1)])
+print(training_set)
+print(test_set)
