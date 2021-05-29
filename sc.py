@@ -5,6 +5,7 @@ import pandas as pd
 from nltk.corpus import stopwords         
 from nltk.stem import snowball      
 from nltk.tokenize import RegexpTokenizer, word_tokenize
+from statistics import mean
 import matplotlib.pyplot as plt 
 import re
 import string
@@ -14,21 +15,13 @@ def get_pos_neg(dataset):
     ## get all the positive and negative labelled reviews
     pos = [] 
     neg = []
-    # pos_tweet = []
-    # neg_tweet = []
-    # tweet_classifier = []
     for index, revs in dataset.iterrows():
         if revs.Recommended == 1:
-            pos.append( revs )
-            # pos_tweet.append(revs.Text)
-            # tweet_classifier.append(revs.Recommended)
+            pos.append( revs.Text )
         else:
-            neg.append( revs) 
-            # neg_tweet.append(revs.Text)
-            # tweet_classifier.append(revs.Recommended)
+            neg.append( revs.Text) 
     # positives = 18540; negatives = 4101
     return pos, neg 
-    # return pos_tweet , neg_tweet , tweet_classifier
 
 
 def preprocess(revs):
@@ -47,25 +40,24 @@ def preprocess(revs):
         #4 stem
         review['Text'] = [stemmer.stem(x) for x in review['Text']]
         revs['Text'][index] = review['Text']
-        # print( revs['Text'][index] )
         # add unique words to dictionary
         dictionary.update(review['Text'])
     
     return dictionary, revs
 
-def process_tweet(tweet):
-    ## takes tweets and returns processed tokens
+def process_review(review):
+    ## takes reviews and returns processed tokens
     tokenizer = RegexpTokenizer(r'\w+')
     stemmer = snowball.SnowballStemmer('english')
     stop_words = stopwords.words('english')
     #1 tokenize 
-    tweet_tokens = tokenizer.tokenize(tweet)
+    review_tokens = tokenizer.tokenize(review)
     #2 lowercase
-    tweet_tokens = [w.lower() for w in tweet_tokens]
+    review_tokens = [w.lower() for w in review_tokens]
     #3 remove stopwords 
-    tweet_tokens= [stemmer.stem(wrd) for wrd in tweet_tokens if not wrd in stop_words ]
+    review_tokens= [stemmer.stem(wrd) for wrd in review_tokens if not wrd in stop_words ]
 
-    return tweet_tokens
+    return review_tokens
 
 
 
@@ -81,43 +73,11 @@ def make_count(dictionary, data):
                 # check frequency of that word in the specific review
                 freq = len( [i for i, x in enumerate(row['Text']) if x == word] )
                 temp = (word, row['Recommended'])
-                # word_freq[ temp ] += 1
                 if temp in word_freq.keys():
                     word_freq[ temp ] += 1
                 else:
                     word_freq[ temp ] = 1
     return word_freq
-
-
-data = pd.read_csv('Reviews1.csv')
-# print( type( data.head()) )
-words, data = preprocess(data)
-#here words is a dict of unique words and data is processed tweet
-# positive_reviews, negative_reviews , Review_classifier = get_pos_neg( data ) 
-positive_reviews, negative_reviews = get_pos_neg( data ) 
-#^ here positive and negative reviews aare just list of strings and Review classifier has coresponding recommendations
-print(len(positive_reviews), " " , len(negative_reviews))
-
-# training set = 80% 
-# testing set = 20%
-# positives = 18540; negatives = 4101
-
-train_pos = positive_reviews[:14832]
-test_pos = positive_reviews[14832:]
-
-train_neg = negative_reviews[:3281]
-test_neg = negative_reviews[3281:]
-
-training_set = train_pos + train_neg
-test_set = test_pos + test_neg
-
-# print (len(Review_classifier))
-
-ratings = make_count(words, data)  # equi to freqs 
-
-# print(ratings[('silki', 1)])   # If you search manually silky gives 126, here it gives 111??
-# print(training_set)
-# print(test_set)
 
 
 def training_naive_bayes(ratings, training_set):
@@ -140,7 +100,8 @@ def training_naive_bayes(ratings, training_set):
     D_pos = len(train_pos)
     D_neg = D - D_pos
     logprior = math.log(D_pos)  - math.log(D_neg)
-    # For each word in the vocabulary get pos and neg probabilitu
+
+    # For each word in the vocabulary get pos and neg probability
     for word in vocab:
         if (word,1.0) in ratings:
             freq_pos = ratings[(word,1.0)]
@@ -157,22 +118,75 @@ def training_naive_bayes(ratings, training_set):
 
     return logprior, loglikelihood
 
+def test_naive_bayes(test_x, test_y, logprior, loglikelihood):
+    accuracy = 0  
+    y_hats = []
+    for tweet in test_x:
+        if predict_review(tweet, logprior, loglikelihood) > 0:
+            y_hat_i = 1
+        else:
+            y_hat_i = 0
+        y_hats.append(y_hat_i)
+    error = mean([abs(x - y) for (x,y) in zip(y_hats, test_y)])
 
-print("Yahan aagaya")
-# print(len(training_set) ,"    " , len(positive_reviews))
-# print(training_naive_bayes(ratings,training_set))
+    accuracy = 1 - error
+    return accuracy
+
+def get_ratings(reviews, positive_reviews, negative_reviews):
+    ratings = []
+    
+    for rev in reviews:
+        if rev in positive_reviews:
+            ratings.append(1)
+        elif rev in negative_reviews:
+            ratings.append(0)
+    
+    return ratings
 
 
-def Prdeict_Tweet(tweet, logprior, loglikelihood):
-
-    Tweet_tokens = process_tweet(tweet)
+def predict_review(review, logprior, loglikelihood):
+    review_tokens = process_review(review)
     p = 0
     p += logprior
-    for word in Tweet_tokens:
+    for word in review_tokens:
         if word in loglikelihood:
             p += loglikelihood[word]
     return p
 
 
+
+
+################
+
+data = pd.read_csv('Reviews1.csv')
+positive_reviews, negative_reviews = get_pos_neg( data ) 
+# positive_reviews & negative_reviews = list of strings, seprated positive & negative reviews
+
+words, data = preprocess(data)
+# words = dict of unique words 
+# data = processed tweet
+
+## training set = 80% 
+## testing set = 20%
+## positives = 18540; negatives = 4101
+
+train_pos = positive_reviews[:14832]
+test_pos = positive_reviews[14832:]
+
+train_neg = negative_reviews[:3281]
+test_neg = negative_reviews[3281:]
+
+training_set = train_pos + train_neg
+test_set = test_pos + test_neg
+
+
+ratings = make_count(words, data) 
+
+# ratings = freqs of words
+
 log_prior , log_likelihood = training_naive_bayes(ratings,training_set)
-print(Prdeict_Tweet("she smiled and was happy" , log_prior , log_likelihood ))
+
+labels = get_ratings(test_set, positive_reviews, negative_reviews)
+print( test_naive_bayes(test_set, labels , log_prior, log_likelihood) )
+
+print(predict_review("she smiled and was happy" , log_prior , log_likelihood ))
