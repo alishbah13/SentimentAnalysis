@@ -3,7 +3,7 @@ from nltk.probability import log_likelihood
 from nltk.sem.logic import TypeResolutionException
 import numpy as np
 import pandas as pd
-from nltk.corpus import stopwords         
+# from nltk.corpus import stopwords         
 from nltk.stem import snowball      
 from nltk.tokenize import RegexpTokenizer, word_tokenize
 from statistics import mean
@@ -12,6 +12,14 @@ import re
 import string
 import math
 import json
+
+stop_words = ["i" , "me" , "my" , "myself" , "we" , "our" , "ours" , "ourselves" , "you" , "you're" , "you've" , "you'll" , " you'd",
+"your" , "yours" , "yourself" , "yourselves" ,'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 
+'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 
+'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+'the', 'and', 'if', 'because', 'as', 'of', 'at', 'by', 'for', 'with', 'about',  'into', 'during', 'before', 'after', 'above', 'below', 'to',
+'from', 'on', 'over', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'each',
+'other', 'such', 'own', 'so', 'than', 'too','s', 't', 'd', 'll', 'm', 'o', 're', 've', 'y',]
 
 def get_pos_neg(dataset):
     ## get all the positive and negative labelled reviews
@@ -30,7 +38,7 @@ def preprocess(revs):
     ## takes reviews and returns pre_processed reviews and dictionary of unique words
     tokenizer = RegexpTokenizer(r'\w+')
     stemmer = snowball.SnowballStemmer('english')
-    stop_words = stopwords.words('english')
+    # stop_words = stopwords.words('english')
     dictionary = set()
     for index, review in revs.iterrows():
         #1 tokenize 
@@ -51,8 +59,8 @@ def process_review(review):
     ## takes reviews and returns processed tokens
     tokenizer = RegexpTokenizer(r'\w+')
     stemmer = snowball.SnowballStemmer('english')
-    stop_words = stopwords.words('english')
-    #1 tokenize 
+    # stop_words = stopwords.words('english')
+    # #1 tokenize 
     review_tokens = tokenizer.tokenize(review)
     #2 lowercase
     review_tokens = [w.lower() for w in review_tokens]
@@ -60,7 +68,6 @@ def process_review(review):
     review_tokens= [stemmer.stem(wrd) for wrd in review_tokens if not wrd in stop_words ]
 
     return review_tokens
-
 
 
 # The keys are a tuple (word, label) and 
