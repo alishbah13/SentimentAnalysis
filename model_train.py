@@ -12,7 +12,13 @@ import re
 import string
 import math
 import json
-
+stop_words = ["i" , "me" , "my" , "myself" , "we" , "our" , "ours" , "ourselves" , "you" , "you're" , "you've" , "you'll" , " you'd",
+"your" , "yours" , "yourself" , "yourselves" ,'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 
+'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 
+'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+'the', 'and', 'if', 'because', 'as', 'of', 'at', 'by', 'for', 'with', 'about',  'into', 'during', 'before', 'after', 'above', 'below', 'to',
+'from', 'on', 'over', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'each',
+'other', 'such', 'own', 'so', 'than', 'too','s', 't', 'd', 'll', 'm', 'o', 're', 've', 'y',]
 def get_pos_neg(dataset):
     ## get all the positive and negative labelled reviews
     pos = [] 
@@ -30,7 +36,7 @@ def preprocess(revs):
     ## takes reviews and returns pre_processed reviews and dictionary of unique words
     tokenizer = RegexpTokenizer(r'\w+')
     stemmer = snowball.SnowballStemmer('english')
-    stop_words = stopwords.words('english')
+    # stop_words = stopwords.words('english')
     dictionary = set()
     for index, review in revs.iterrows():
         #1 tokenize 
@@ -51,7 +57,7 @@ def process_review(review):
     ## takes reviews and returns processed tokens
     tokenizer = RegexpTokenizer(r'\w+')
     stemmer = snowball.SnowballStemmer('english')
-    stop_words = stopwords.words('english')
+    # stop_words = stopwords.words('english')
     #1 tokenize 
     review_tokens = tokenizer.tokenize(review)
     #2 lowercase
@@ -160,7 +166,7 @@ def predict_review(review, logprior, loglikelihood):
 
 ################
 if __name__ == '__main__':
-    data = pd.read_csv('Reviews1.csv')
+    data = pd.read_csv('Reviews.csv')
     positive_reviews, negative_reviews = get_pos_neg( data ) 
     # positive_reviews & negative_reviews = list of strings, seprated positive & negative reviews
 
@@ -172,8 +178,12 @@ if __name__ == '__main__':
     ## testing set = 20%
     ## positives = 18540; negatives = 4101
 
-    train_pos = positive_reviews[:14832]
-    test_pos = positive_reviews[14832:]
+    # train_pos = positive_reviews[:14832]
+    # test_pos = positive_reviews[14832:]
+    positive_reviews = positive_reviews[:4101]
+
+    train_pos = positive_reviews[:3281]
+    test_pos = positive_reviews[3281:]
 
     train_neg = negative_reviews[:3281]
     test_neg = negative_reviews[3281:]
