@@ -12,7 +12,6 @@ import re
 import string
 import math
 import json
-
 stop_words = ["i" , "me" , "my" , "myself" , "we" , "our" , "ours" , "ourselves" , "you" , "you're" , "you've" , "you'll" , " you'd",
 "your" , "yours" , "yourself" , "yourselves" ,'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 
 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 
@@ -20,7 +19,6 @@ stop_words = ["i" , "me" , "my" , "myself" , "we" , "our" , "ours" , "ourselves"
 'the', 'and', 'if', 'because', 'as', 'of', 'at', 'by', 'for', 'with', 'about',  'into', 'during', 'before', 'after', 'above', 'below', 'to',
 'from', 'on', 'over', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'each',
 'other', 'such', 'own', 'so', 'than', 'too','s', 't', 'd', 'll', 'm', 'o', 're', 've', 'y',]
-
 def get_pos_neg(dataset):
     ## get all the positive and negative labelled reviews
     pos = [] 
@@ -60,7 +58,7 @@ def process_review(review):
     tokenizer = RegexpTokenizer(r'\w+')
     stemmer = snowball.SnowballStemmer('english')
     # stop_words = stopwords.words('english')
-    # #1 tokenize 
+    #1 tokenize 
     review_tokens = tokenizer.tokenize(review)
     #2 lowercase
     review_tokens = [w.lower() for w in review_tokens]
@@ -130,16 +128,24 @@ def training_naive_bayes(ratings, training_set):
 def test_naive_bayes(test_x, test_y, logprior, loglikelihood):
     accuracy = 0  
     y_hats = []
+    predictions =[]
     for tweet in test_x:
-        if predict_review(tweet, logprior, loglikelihood) > 0:
+        a =predict_review(tweet, logprior, loglikelihood)
+        if a > 0:
             y_hat_i = 1
+            predictions.append(a)
         else:
             y_hat_i = 0
-        y_hats.append(y_hat_i)
+            predictions.append(a)
+        y_hats.append(y_hat_i)  
     error = mean([abs(x - y) for (x,y) in zip(y_hats, test_y)])
 
     accuracy = 1 - error
-    return accuracy
+    range = {"max" : max(predictions) , "min" : min(predictions)}
+    f = open ("range.txt" , "w")
+    f.write(json.dumps(range))
+    f.close()
+    return accuracy , max(predictions) , min(predictions)
 
 def get_ratings(reviews, positive_reviews, negative_reviews):
     ratings = []
@@ -167,7 +173,7 @@ def predict_review(review, logprior, loglikelihood):
 
 ################
 if __name__ == '__main__':
-    data = pd.read_csv('Reviews1.csv')
+    data = pd.read_csv('Reviews.csv')
     positive_reviews, negative_reviews = get_pos_neg( data ) 
     # positive_reviews & negative_reviews = list of strings, seprated positive & negative reviews
 
@@ -179,11 +185,16 @@ if __name__ == '__main__':
     ## testing set = 20%
     ## positives = 18540; negatives = 4101
 
-    train_pos = positive_reviews[:14832]
-    test_pos = positive_reviews[14832:]
+    # train_pos = positive_reviews[:14832]
+    # test_pos = positive_reviews[14832:]
+
+    positive_reviews = positive_reviews[:4101]  
+
+    train_pos = positive_reviews[:3281]
+    test_pos = positive_reviews[3281:] 
 
     train_neg = negative_reviews[:3281]
-    test_neg = negative_reviews[3281:]
+    test_neg = negative_reviews[3281:]  
 
     training_set = train_pos + train_neg
     test_set = test_pos + test_neg
