@@ -10,7 +10,7 @@ f2.close()
 
 p = predict_review("good blouse will surely buy again " , probabilities['log_prior'] , probabilities['log_likelihood'])
 
-rating = (5-0) * ((p - range["min"] ) / (range["max"] - range["min"] )) + 0
+rating = (5-1) * ((p - range["min"] ) / ((range["max"] - range["min"]/2) )) + 1
 
 print("Prediction of review : " , p)
 print("Rating of review   :  ",format(rating, '0.4f'))
