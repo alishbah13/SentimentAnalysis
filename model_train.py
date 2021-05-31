@@ -168,7 +168,8 @@ def predict_review(review, logprior, loglikelihood):
             p += loglikelihood[word]
     return p
 
-
+def rating(p, low, hi):
+    return round( (5-1) * ((p - (low / 5) ) / (hi/5 - low/5 )) + 1 , 4)
 
 
 ################
