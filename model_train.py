@@ -129,8 +129,8 @@ def test_naive_bayes(test_x, test_y, logprior, loglikelihood):
     accuracy = 0  
     y_hats = []
     predictions =[]
-    for tweet in test_x:
-        a =predict_review(tweet, logprior, loglikelihood)
+    for review in test_x:
+        a =predict_review(review, logprior, loglikelihood)
         if a > 0:
             y_hat_i = 1
             predictions.append(a)
@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
     words, data = preprocess(data)
     # words = dict of unique words 
-    # data = processed tweet
+    # data = processed review
 
     ## training set = 80% 
     ## testing set = 20%
